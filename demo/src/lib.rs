@@ -60,62 +60,65 @@ async fn prep(ctx: &Context) -> anyhow::Result<()> {
 
     let client = reqwest::Client::new();
     let payload = serde_json::json!({
-        "name": &ctx.index,
+        "override_if_exists": true,
+        "index": {
+            "name": &ctx.index,
 
-        "writer_buffer": 60_000_000,
-        "writer_threads": 4,
+            "writer_buffer": 60_000_000,
+            "writer_threads": 4,
 
-        "reader_threads": 2,
+            "reader_threads": 2,
 
-        "max_concurrency": 4,
-        "search_fields": [
-            "title",
-            "overview"
-        ],
+            "max_concurrency": 4,
+            "search_fields": [
+                "title",
+                "overview"
+            ],
 
-        "storage_type": "tempdir",
+            "storage_type": "tempdir",
 
-        "fields": {
-            "id": {
-                "type": "string",
-                "stored": true
+            "fields": {
+                "id": {
+                    "type": "string",
+                    "stored": true
+                },
+                "poster": {
+                    "type": "string",
+                    "stored": true
+                },
+                "release_date": {
+                    "type": "i64",
+                    "stored": true,
+                    "indexed": false,
+                    "fast": "single"
+                },
+                "title": {
+                    "type": "text",
+                    "stored": true
+                },
+                "overview": {
+                   "type": "text",
+                   "stored": true
+                },
+                "genres": {
+                   "type": "text",
+                   "stored": true
+                }
             },
-            "poster": {
-                "type": "string",
-                "stored": true
-            },
-            "release_date": {
-                "type": "i64",
-                "stored": true,
-                "indexed": false,
-                "fast": "single"
-            },
-            "title": {
-                "type": "text",
-                "stored": true
-            },
-            "overview": {
-               "type": "text",
-               "stored": true
-            },
-            "genres": {
-               "type": "text",
-               "stored": true
-            }
-        },
 
-        "boost_fields": {
-            "title": 2.0,
-            "overview": 0.8
-        },
+            "boost_fields": {
+                "title": 2.0,
+                "overview": 0.8
+            },
 
-        "use_fast_fuzzy": ctx.use_fast_fuzzy,
-        "strip_stop_words": ctx.strip_stop_words,
+            "use_fast_fuzzy": ctx.use_fast_fuzzy,
+            "strip_stop_words": ctx.strip_stop_words,
+        }
     });
 
     let r = client
         .post(format!(
-            "{}/indexes?override_if_exists=true",
+            "{}/indexes",
             &ctx.target_server
         ))
         .json(&payload)
@@ -130,21 +133,6 @@ async fn prep(ctx: &Context) -> anyhow::Result<()> {
 
     // let changed propagate
     tokio::time::sleep(Duration::from_secs(1)).await;
-
-    // Clear the existing docs
-    let r = client
-        .delete(format!(
-            "{}/indexes/{}/documents/clear",
-            &ctx.target_server, &ctx.index
-        ))
-        .send()
-        .await?;
-
-    if r.status() != StatusCode::OK {
-        return Err(Error::msg(
-            "server returned a non 200 OK code when clearing docs. Check your server logs.",
-        ));
-    }
 
     let start = Instant::now();
     let r = client
