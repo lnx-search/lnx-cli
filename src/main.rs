@@ -42,7 +42,7 @@ pub enum Commands {
         threads: Option<usize>,
 
         /// The directory to output the image results.
-        #[structopt(long, short = "out")]
+        #[structopt(long, short = "o")]
         output_dir: String,
 
         /// The path to get the query string data.

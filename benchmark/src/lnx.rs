@@ -11,7 +11,7 @@ pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Res
 
     // Clear the existing docs
     let _ = client
-        .delete(format!("{}/indexes/bench/{}/clear", address, index))
+        .delete(format!("{}/indexes/{}/documents/clear", address, index))
         .send()
         .await?;
 
@@ -66,11 +66,18 @@ pub(crate) async fn bench_typing(
 }
 
 async fn search(client: RequestClient, uri: TargetUri, query: Query) -> anyhow::Result<u16> {
-    let mut uri = reqwest::Url::parse(uri.as_ref()).expect("get uri");
+    let val = serde_json::json!({
+        "query": {
+            "value": query,
+            "kind": "fuzzy",
+        },
+    });
 
-    uri.set_query(Some(&format!("query={}", query)));
-
-    let r = client.get(uri).send().await?;
+    let r = client
+        .post(uri.as_ref())
+        .json(&val)
+        .send()
+        .await?;
 
     Ok(r.status().as_u16())
 }
