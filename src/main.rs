@@ -23,7 +23,7 @@ pub enum Commands {
         #[structopt(long)]
         target: BenchTarget,
 
-        /// The target platform to bench mark, either 'lnx' or 'meilisearch'.
+        /// The target platform to bench mark, either 'typing' or 'standard'.
         #[structopt(long, short = "m")]
         mode: BenchMode,
 
