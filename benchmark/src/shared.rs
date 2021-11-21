@@ -69,6 +69,7 @@ pub(crate) async fn start_typing<T: Future<Output = Result<u16>>>(
                 sample.register_error(status);
             } else {
                 sample.add_latency(stop);
+                sample.add_latency_for_sentence_length(search_term.len(), stop);
             }
         }
     }
