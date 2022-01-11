@@ -1,5 +1,7 @@
 use std::sync::Arc;
 use std::time::Instant;
+use anyhow::anyhow;
+use reqwest::StatusCode;
 
 use serde_json::Value;
 
@@ -10,22 +12,30 @@ pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Res
     let client = reqwest::Client::new();
 
     // Clear the existing docs
-    let _ = client
+    let e = client
         .delete(format!("{}/indexes/{}/documents/clear", address, index))
         .send()
         .await?;
 
     let start = Instant::now();
-    let _ = client
+    let r = client
         .post(format!("{}/indexes/{}/documents", address, index))
         .json(&data)
         .send()
         .await?;
 
-    let _ = client
+    if r.status() != StatusCode::OK {
+        return Err(anyhow!("got unexpected response code {}", r.status()))
+    }
+
+    let r = client
         .post(format!("{}/indexes/{}/commit", address, index))
         .send()
         .await?;
+
+    if r.status() != StatusCode::OK {
+        return Err(anyhow!("got unexpected response code {}", r.status()))
+    }
 
     let delta = start.elapsed();
     info!("lnx took {:?} to process submitted documents", delta);
