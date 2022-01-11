@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::time::Duration;
@@ -11,26 +11,32 @@ use crate::shared::{Query, RequestClient, TargetUri};
 
 #[derive(Debug, Deserialize)]
 struct EnqueueResponseData {
-    #[serde(rename = "uid")]
+    #[serde(rename = "updateId")]
     update_id: usize,
-
-    #[serde(flatten)]
-    _other: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(tag = "status")]
 #[serde(rename_all = "lowercase")]
-struct CheckData {
-    status: String,
+enum CheckData {
+    Processed {
+        #[serde(rename = "processedAt")]
+        processed_at: DateTime<Utc>,
 
-    #[serde(rename = "startedAt")]
-    started: Option<chrono::DateTime<Utc>>,
+        #[serde(rename = "enqueuedAt")]
+        enqueued_at: DateTime<Utc>,
 
-    #[serde(rename = "finishedAt")]
-    finished: Option<chrono::DateTime<Utc>>,
-
-    #[serde(flatten)]
-    _other: HashMap<String, Value>,
+        #[serde(flatten)]
+        _other: HashMap<String, Value>,
+    },
+    Enqueued {
+        #[serde(flatten)]
+        _other: HashMap<String, Value>,
+    },
+    Processing {
+        #[serde(flatten)]
+        _other: HashMap<String, Value>,
+    },
 }
 
 pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Result<()> {
@@ -55,14 +61,19 @@ pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Res
 
     loop {
         let data: CheckData = client
-            .get(format!("{}/tasks/{}", address, status))
+            .get(format!("{}/indexes/{}/updates/{}", address, index, status))
             .send()
             .await?
             .json()
             .await?;
 
-        if data.status == "succeeded" {
-            delta = data.finished.unwrap() - data.started.unwrap();
+        if let CheckData::Processed {
+            processed_at,
+            enqueued_at,
+            ..
+        } = data
+        {
+            delta = processed_at - enqueued_at;
             break;
         }
 
