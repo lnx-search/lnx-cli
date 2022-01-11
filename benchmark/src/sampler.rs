@@ -29,6 +29,7 @@ impl SamplerHandle {
     pub(crate) fn finish(mut self) {
         let total_elapsed = self.sample.latencies.iter().sum::<Duration>();
         self.sample.requests_second = self.sample.latencies.len() as f64 / total_elapsed.as_secs_f64();
+        dbg!(total_elapsed, self.sample.requests_second);
 
         let _ = self.submit.send(self.sample);
     }
@@ -149,6 +150,7 @@ impl Sampler {
         // taken processing the requests then divide by the concurrency factor as that allows upto
         // n requests to happen in parallel.
         let requests_a_sec = req_sec.iter().sum::<f64>() as f64 / req_sec.len() as f64;
+        dbg!(requests_a_sec);
 
         info!("General benchmark results:");
         info!("     Total Succesful Requests Sent: {}", all_results.len());
