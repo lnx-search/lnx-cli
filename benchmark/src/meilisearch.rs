@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::time::Duration;
@@ -11,32 +11,26 @@ use crate::shared::{Query, RequestClient, TargetUri};
 
 #[derive(Debug, Deserialize)]
 struct EnqueueResponseData {
-    #[serde(rename = "updateId")]
+    #[serde(rename = "uid")]
     update_id: usize,
+
+    #[serde(flatten)]
+    _other: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(tag = "status")]
 #[serde(rename_all = "lowercase")]
-enum CheckData {
-    Processed {
-        #[serde(rename = "processedAt")]
-        processed_at: DateTime<Utc>,
+struct CheckData {
+    status: String,
 
-        #[serde(rename = "enqueuedAt")]
-        enqueued_at: DateTime<Utc>,
+    #[serde(rename = "startedAt")]
+    started: Option<chrono::DateTime<Utc>>,
 
-        #[serde(flatten)]
-        _other: HashMap<String, Value>,
-    },
-    Enqueued {
-        #[serde(flatten)]
-        _other: HashMap<String, Value>,
-    },
-    Processing {
-        #[serde(flatten)]
-        _other: HashMap<String, Value>,
-    },
+    #[serde(rename = "finishedAt")]
+    finished: Option<chrono::DateTime<Utc>>,
+
+    #[serde(flatten)]
+    _other: HashMap<String, Value>,
 }
 
 pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Result<()> {
@@ -61,19 +55,14 @@ pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Res
 
     loop {
         let data: CheckData = client
-            .get(format!("{}/indexes/{}/updates/{}", address, index, status))
+            .get(format!("{}/tasks/{}", address, status))
             .send()
             .await?
             .json()
             .await?;
 
-        if let CheckData::Processed {
-            processed_at,
-            enqueued_at,
-            ..
-        } = data
-        {
-            delta = processed_at - enqueued_at;
+        if data.status == "succeeded" {
+            delta = data.finished.unwrap() - data.started.unwrap();
             break;
         }
 
@@ -86,8 +75,9 @@ pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Res
         delta.num_milliseconds() / 100i64
     );
 
-    info!("pausing for 30 secs to allow syncing");
+    info!("waiting 30 secs");
     tokio::time::sleep(Duration::from_secs(30)).await;
+
 
     Ok(())
 }
