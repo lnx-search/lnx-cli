@@ -86,6 +86,9 @@ pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Res
         delta.num_milliseconds() / 100i64
     );
 
+    info!("pausing for 30 secs to allow syncing");
+    tokio::time::sleep(Duration::from_secs(30)).await;
+
     Ok(())
 }
 
