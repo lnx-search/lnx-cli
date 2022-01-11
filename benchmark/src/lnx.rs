@@ -25,7 +25,7 @@ pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Res
         .await?;
 
     if r.status() != StatusCode::OK {
-        return Err(anyhow!("got unexpected response code {}", r.status()))
+        return Err(anyhow!("got unexpected response code {} data: {}", r.status(), r.text().await?))
     }
 
     let r = client
@@ -34,7 +34,7 @@ pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Res
         .await?;
 
     if r.status() != StatusCode::OK {
-        return Err(anyhow!("got unexpected response code {}", r.status()))
+        return Err(anyhow!("got unexpected response code {} data: {}", r.status(), r.text().await?))
     }
 
     let delta = start.elapsed();
