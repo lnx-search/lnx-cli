@@ -15,21 +15,21 @@ pub(crate) struct SampleData {
     /// All request latencies.
     sentence_length_latencies: Vec<Vec<Duration>>,
 
-    /// How long the system took to run though.
-    ran_for: Duration,
-
     errors: HashMap<u16, usize>,
+
+    requests_second: f64,
 }
 
 pub(crate) struct SamplerHandle {
     sample: SampleData,
-    start: Instant,
     submit: oneshot::Sender<ChannelMessage>,
 }
 
 impl SamplerHandle {
     pub(crate) fn finish(mut self) {
-        self.sample.ran_for = self.start.elapsed();
+        let total_elapsed = self.sample.latencies.iter().sum::<Duration>();
+        self.sample.requests_second = self.sample.latencies.len() as f64 / total_elapsed.as_secs_f64();
+
         let _ = self.submit.send(self.sample);
     }
 
@@ -37,15 +37,14 @@ impl SamplerHandle {
         let sample = SampleData {
             latencies: vec![],
             sentence_length_latencies: vec![],
-            ran_for: Duration::default(),
             errors: HashMap::new(),
+            requests_second: 0.0
         };
 
         let (tx, rx) = oneshot::channel();
 
         let inst = Self {
             sample,
-            start: Instant::now(),
             submit: tx,
         };
 
@@ -64,10 +63,6 @@ impl SamplerHandle {
         }
 
         self.sample.sentence_length_latencies[length].push(dur);
-    }
-
-    pub(crate) fn start_timing(&mut self) {
-        self.start = Instant::now();
     }
 
     pub(crate) fn register_error(&mut self, status: u16) {
@@ -101,7 +96,7 @@ impl Sampler {
     pub(crate) async fn wait_and_sample(self) -> anyhow::Result<()> {
         let total_concurrency = self.sample_handles.len();
 
-        let mut duration_times = vec![];
+        let mut req_sec = vec![];
         let mut all_results: Vec<Duration> = vec![];
         let mut all_sentence_length_latencies: HashMap<usize, Vec<Duration>> = HashMap::new();
         let mut errors = HashMap::new();
@@ -113,7 +108,7 @@ impl Sampler {
                 Err(_) => continue,
             };
 
-            duration_times.push(res.ran_for);
+            req_sec.push(res.requests_second);
             all_results.append(&mut res.latencies);
 
             for (length, mut latencies) in res.sentence_length_latencies.drain(..).enumerate() {
@@ -152,11 +147,10 @@ impl Sampler {
             }
         }
 
-        // Calculate the total time spent handling succesful requests by adding up all the time
+        // Calculate the total time spent handling successful requests by adding up all the time
         // taken processing the requests then divide by the concurrency factor as that allows upto
         // n requests to happen in parallel.
-        let total_request_time: Duration = all_results.iter().sum::<Duration>() / total_concurrency as u32;
-        let requests_a_sec = all_results.len() as f64 / total_request_time.as_secs_f64();
+        let requests_a_sec = req_sec.iter().sum::<f64>() as f64 / req_sec.len() as f64;
 
         info!("General benchmark results:");
         info!("     Total Succesful Requests Sent: {}", all_results.len());
