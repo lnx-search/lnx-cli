@@ -149,8 +149,7 @@ impl Sampler {
         // Calculate the total time spent handling successful requests by adding up all the time
         // taken processing the requests then divide by the concurrency factor as that allows upto
         // n requests to happen in parallel.
-        let requests_a_sec = req_sec.iter().sum::<f64>() as f64 / req_sec.len() as f64;
-        dbg!(requests_a_sec);
+        let requests_a_sec = req_sec.iter().sum::<f64>() as f64;
 
         info!("General benchmark results:");
         info!("     Total Succesful Requests Sent: {}", all_results.len());
