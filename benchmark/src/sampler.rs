@@ -29,7 +29,6 @@ impl SamplerHandle {
     pub(crate) fn finish(mut self) {
         let total_elapsed = self.sample.latencies.iter().sum::<Duration>();
         self.sample.requests_second = self.sample.latencies.len() as f64 / total_elapsed.as_secs_f64();
-        dbg!(total_elapsed, self.sample.requests_second);
 
         let _ = self.submit.send(self.sample);
     }
