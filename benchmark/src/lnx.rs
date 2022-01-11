@@ -12,7 +12,7 @@ pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Res
     let client = reqwest::Client::new();
 
     // Clear the existing docs
-    let e = client
+    let _ = client
         .delete(format!("{}/indexes/{}/documents/clear", address, index))
         .send()
         .await?;
