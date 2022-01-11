@@ -146,7 +146,7 @@ impl Sampler {
         hist.auto(true);
         for result in all_results.iter() {
             if result.as_micros() > 0 {
-                hist.record(result.as_micros())?;
+                hist.record(result.as_micros() as u64)?;
             }
         }
 
@@ -157,10 +157,10 @@ impl Sampler {
         info!("General benchmark results:");
         info!("     Total Requests Sent: {}", all_results.len());
         info!("     Average Requests/sec: {:.2}", requests_a_sec);
-        info!("     Average Latency: {:?}", Duration::from_secs_f64(hist.mean() / (1000f64.pow(2))));
+        info!("     Average Latency: {:?}", Duration::from_secs_f64(hist.mean() / (1000f64.powf(2.0))));
         info!("     Max Latency: {:?}", Duration::from_micros(hist.max()));
         info!("     Min Latency: {:?}", Duration::from_micros(hist.min()));
-        info!("     Stdev Latency: {:?}", Duration::from_secs_f64(hist.stdev() / (1000f64.pow(2))));
+        info!("     Stdev Latency: {:?}", Duration::from_secs_f64(hist.stdev() / (1000f64.powf(2.0))));
 
         for (code, amount) in errors {
             warn!("     Got status {}: {}", code, amount);
