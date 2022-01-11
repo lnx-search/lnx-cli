@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use anyhow::anyhow;
 use hdrhistogram::Histogram as HdrHistogram;
 use tokio::sync::oneshot;
 use tokio::time::{Duration, Instant};
@@ -105,7 +106,10 @@ impl Sampler {
         let output = format!("{}/run-output.png", self.output);
 
         for sample in self.sample_handles {
-            let mut res = sample.await?;
+            let mut res = match sample.await {
+                Ok(r) => r,
+                Err(_) => continue,
+            };
 
             duration_times.push(res.ran_for);
             all_results.append(&mut res.latencies);
@@ -133,11 +137,17 @@ impl Sampler {
             }
         }
 
+        if all_results.is_empty() {
+            return Err(anyhow!("Unable to succesfully complete test due to no tasks succeeding"));
+        }
+
         let mut hist = HdrHistogram::<u64>::new_with_bounds(1, 60 * 60 * 1000, 2).unwrap();
 
         hist.auto(true);
         for result in all_results.iter() {
-            hist.record(result.as_millis() as u64)?;
+            if result.as_micros() > 0 {
+                hist.record(result.as_micros())?;
+            }
         }
 
         let avg_dur: Duration =
@@ -147,16 +157,10 @@ impl Sampler {
         info!("General benchmark results:");
         info!("     Total Requests Sent: {}", all_results.len());
         info!("     Average Requests/sec: {:.2}", requests_a_sec);
-        info!("     Average Latency: {:?}", Duration::from_secs_f64(hist.mean() / 1000f64));
-        info!("     Max Latency: {:?}", Duration::from_millis(hist.max()));
-        info!("     Min Latency: {:?}", Duration::from_millis( hist.min()));
-        info!("     Stdev Latency: {:?}", Duration::from_secs_f64( hist.stdev() / 1000f64));
-        let percentages = [50f64, 90f64, 95f64, 99f64, 99.9f64, 99.99f64, 99.999f64];
-        for pct in &percentages {
-            let v = hist.value_at_percentile(*pct);
-            info!("     {}'th percentile of data is {:?}",
-                pct,  Duration::from_millis(v));
-        }
+        info!("     Average Latency: {:?}", Duration::from_secs_f64(hist.mean() / (1000f64.pow(2))));
+        info!("     Max Latency: {:?}", Duration::from_micros(hist.max()));
+        info!("     Min Latency: {:?}", Duration::from_micros(hist.min()));
+        info!("     Stdev Latency: {:?}", Duration::from_secs_f64(hist.stdev() / (1000f64.pow(2))));
 
         for (code, amount) in errors {
             warn!("     Got status {}: {}", code, amount);

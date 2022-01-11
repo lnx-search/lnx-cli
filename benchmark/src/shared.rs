@@ -29,7 +29,13 @@ pub(crate) async fn start_standard<T: Future<Output = Result<u16>>>(
 
     for term in terms.iter() {
         let start = Instant::now();
-        let status = callback(client.clone(), search_addr.clone(), term.clone()).await?;
+         let status = match callback(client.clone(), search_addr.clone(), term.clone()).await {
+            Ok(s) => s,
+            Err(e) => {
+                sample.finish();
+                return Err(e)
+            }
+        };
         let stop = start.elapsed();
 
         if status != 200 {
@@ -62,7 +68,13 @@ pub(crate) async fn start_typing<T: Future<Output = Result<u16>>>(
             let query: String = search_term.iter().collect();
 
             let start = Instant::now();
-            let status = callback(client.clone(), search_addr.clone(), query).await?;
+            let status = match callback(client.clone(), search_addr.clone(), query).await {
+                Ok(s) => s,
+                Err(e) => {
+                    sample.finish();
+                    return Err(e)
+                }
+            };
             let stop = start.elapsed();
 
             if status != 200 {

@@ -137,7 +137,9 @@ async fn start(ctx: Context) -> anyhow::Result<()> {
     }
 
     for handle in handles {
-        let _ = handle.await??;
+        if let Err(e) = handle.await? {
+            error!("Aborted early due to error: {}", e);
+        }
     }
 
     sample_system.wait_and_sample().await?;
