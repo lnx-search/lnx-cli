@@ -99,6 +99,8 @@ impl Sampler {
     }
 
     pub(crate) async fn wait_and_sample(self) -> anyhow::Result<()> {
+        let total_concurrency = self.sample_handles.len();
+
         let mut duration_times = vec![];
         let mut all_results: Vec<Duration> = vec![];
         let mut all_sentence_length_latencies: HashMap<usize, Vec<Duration>> = HashMap::new();
@@ -150,7 +152,10 @@ impl Sampler {
             }
         }
 
-        let total_request_time: Duration = all_results.iter().sum::<Duration>();
+        // Calculate the total time spent handling succesful requests by adding up all the time
+        // taken processing the requests then divide by the concurrency factor as that allows upto
+        // n requests to happen in parallel.
+        let total_request_time: Duration = all_results.iter().sum::<Duration>() / total_concurrency as u32;
         let requests_a_sec = all_results.len() as f64 / total_request_time.as_secs_f64();
 
         info!("General benchmark results:");
