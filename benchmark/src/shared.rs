@@ -62,7 +62,7 @@ pub(crate) async fn start_typing<T: Future<Output = Result<u16>>>(
             let query: String = search_term.iter().collect();
 
             let start = Instant::now();
-            let status = callback(client.clone(), search_addr.clone(), query).await.unwrap_or(1500);
+            let status = callback(client.clone(), search_addr.clone(), query).await?;
             let stop = start.elapsed();
 
             if status != 200 {
