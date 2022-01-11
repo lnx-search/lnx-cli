@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::time::Duration;
@@ -22,6 +22,12 @@ struct EnqueueResponseData {
 #[serde(rename_all = "lowercase")]
 struct CheckData {
     status: String,
+
+    #[serde(rename = "startedAt")]
+    started: chrono::DateTime<Utc>,
+
+    #[serde(rename = "finishedAt")]
+    finished: chrono::DateTime<Utc>,
 
     #[serde(flatten)]
     _other: HashMap<String, Value>,
@@ -56,7 +62,7 @@ pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Res
             .await?;
 
         if data.status == "succeeded" {
-            delta = processed_at - enqueued_at;
+            delta = data.finished - data.started;
             break;
         }
 
