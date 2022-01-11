@@ -155,7 +155,7 @@ impl Sampler {
         let requests_a_sec = all_results.len() as f64 / avg_dur.as_secs_f64();
 
         info!("General benchmark results:");
-        info!("     Total Requests Sent: {}", all_results.len());
+        info!("     Total Succesful Requests Sent: {}", all_results.len());
         info!("     Average Requests/sec: {:.2}", requests_a_sec);
         info!("     Average Latency: {:?}", Duration::from_secs_f64(hist.mean() / (1000f64.powf(2.0))));
         info!("     Max Latency: {:?}", Duration::from_micros(hist.max()));
