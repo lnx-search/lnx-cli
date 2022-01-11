@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use anyhow::anyhow;
 use hdrhistogram::Histogram as HdrHistogram;
 use tokio::sync::oneshot;
-use tokio::time::{Duration, Instant};
+use tokio::time::Duration;
 use plotters::prelude::*;
 
 pub(crate) type ChannelMessage = SampleData;
@@ -94,8 +94,6 @@ impl Sampler {
     }
 
     pub(crate) async fn wait_and_sample(self) -> anyhow::Result<()> {
-        let total_concurrency = self.sample_handles.len();
-
         let mut req_sec = vec![];
         let mut all_results: Vec<Duration> = vec![];
         let mut all_sentence_length_latencies: HashMap<usize, Vec<Duration>> = HashMap::new();

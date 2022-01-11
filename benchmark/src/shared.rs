@@ -25,7 +25,6 @@ pub(crate) async fn start_standard<T: Future<Output = Result<u16>>>(
     callback: fn(RequestClient, TargetUri, Query) -> T,
 ) -> Result<()> {
     let (client, search_addr) = get_client_and_addr(address, index);
-    sample.start_timing();
 
     for term in terms.iter() {
         let start = Instant::now();
