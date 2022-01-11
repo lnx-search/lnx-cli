@@ -150,9 +150,8 @@ impl Sampler {
             }
         }
 
-        let avg_dur: Duration =
-            duration_times.iter().sum::<Duration>() / duration_times.len() as u32;
-        let requests_a_sec = all_results.len() as f64 / avg_dur.as_secs_f64();
+        let total_request_time: Duration = all_results.iter().sum::<Duration>();
+        let requests_a_sec = all_results.len() as f64 / total_request_time.as_secs_f64();
 
         info!("General benchmark results:");
         info!("     Total Succesful Requests Sent: {}", all_results.len());
