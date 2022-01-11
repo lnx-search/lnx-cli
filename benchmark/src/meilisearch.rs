@@ -64,7 +64,7 @@ pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Res
 
     loop {
         let data: CheckData = client
-            .get(format!("{}/indexes/{}/updates/{}", address, index, status))
+            .get(format!("{}/tasks/{}", address, status))
             .send()
             .await?
             .json()
