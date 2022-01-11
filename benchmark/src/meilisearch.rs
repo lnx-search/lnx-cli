@@ -24,10 +24,10 @@ struct CheckData {
     status: String,
 
     #[serde(rename = "startedAt")]
-    started: chrono::DateTime<Utc>,
+    started: Option<chrono::DateTime<Utc>>,
 
     #[serde(rename = "finishedAt")]
-    finished: chrono::DateTime<Utc>,
+    finished: Option<chrono::DateTime<Utc>>,
 
     #[serde(flatten)]
     _other: HashMap<String, Value>,
@@ -62,7 +62,7 @@ pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Res
             .await?;
 
         if data.status == "succeeded" {
-            delta = data.finished - data.started;
+            delta = data.finished.unwrap() - data.started.unwrap();
             break;
         }
 
