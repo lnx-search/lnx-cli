@@ -29,8 +29,9 @@ pub(crate) async fn search(payload: extract::Json<SearchPayload>) -> impl IntoRe
 
     let val = serde_json::json!({
         "query": {
-            "value": payload.query,
-            "kind": payload.mode,
+            payload.mode.clone(): {
+                "ctx": payload.query
+            },
         },
     });
 

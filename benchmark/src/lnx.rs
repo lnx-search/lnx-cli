@@ -68,8 +68,9 @@ pub(crate) async fn bench_typing(
 async fn search(client: RequestClient, uri: TargetUri, query: Query) -> anyhow::Result<u16> {
     let val = serde_json::json!({
         "query": {
-            "value": query,
-            "kind": "fuzzy",
+            "fuzzy": {
+                "ctx": query
+            }
         },
     });
 
