@@ -76,7 +76,7 @@ pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Res
     );
 
     info!("waiting 30 secs");
-    tokio::time::sleep(Duration::from_secs(30));
+    tokio::time::sleep(Duration::from_secs(30)).await;
 
 
     Ok(())
