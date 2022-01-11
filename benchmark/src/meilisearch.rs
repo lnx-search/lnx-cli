@@ -19,27 +19,12 @@ struct EnqueueResponseData {
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(tag = "status")]
 #[serde(rename_all = "lowercase")]
-enum CheckData {
-    Processed {
-        #[serde(rename = "processedAt")]
-        processed_at: DateTime<Utc>,
+struct CheckData {
+    status: String,
 
-        #[serde(rename = "enqueuedAt")]
-        enqueued_at: DateTime<Utc>,
-
-        #[serde(flatten)]
-        _other: HashMap<String, Value>,
-    },
-    Enqueued {
-        #[serde(flatten)]
-        _other: HashMap<String, Value>,
-    },
-    Processing {
-        #[serde(flatten)]
-        _other: HashMap<String, Value>,
-    },
+    #[serde(flatten)]
+    _other: HashMap<String, Value>,
 }
 
 pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Result<()> {
@@ -70,12 +55,7 @@ pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Res
             .json()
             .await?;
 
-        if let CheckData::Processed {
-            processed_at,
-            enqueued_at,
-            ..
-        } = data
-        {
+        if data.status == "succeeded" {
             delta = processed_at - enqueued_at;
             break;
         }
