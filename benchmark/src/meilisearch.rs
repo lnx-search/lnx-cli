@@ -11,8 +11,11 @@ use crate::shared::{Query, RequestClient, TargetUri};
 
 #[derive(Debug, Deserialize)]
 struct EnqueueResponseData {
-    #[serde(rename = "updateId")]
+    #[serde(rename = "uid")]
     update_id: usize,
+
+    #[serde(flatten)]
+    _other: HashMap<String, Value>,
 }
 
 #[derive(Debug, Deserialize)]
