@@ -19,7 +19,7 @@ pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Res
     if let Some(arr) = data.as_array() {
         for row in arr {
             let r = client
-                .post(format!("{}/collections/{}/documents/import?action=create", address, index))
+                .post(format!("{}/collections/{}/documents", address, index))
                 .header("X-TYPESENSE-API-KEY", HeaderValue::from_static("bench-key"))
                 .json(row)
                 .send()
