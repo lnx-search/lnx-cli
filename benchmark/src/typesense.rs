@@ -16,7 +16,7 @@ pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Res
 
     let start = Instant::now();
     let r = client
-        .post(format!("{}/indexes/{}/documents", address, index))
+        .post(format!("{}/collections/{}/documents", address, index))
         .header("X-TYPESENSE-API-KEY", HeaderValue::from_static("bench-key"))
         .json(&data)
         .send()
