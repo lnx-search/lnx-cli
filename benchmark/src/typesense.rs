@@ -85,7 +85,6 @@ async fn search(client: RequestClient, uri: TargetUri, query: Query) -> anyhow::
     let uri = uri.replace("indexes", "collections")
         .replace("/search", "/documents/search");
 
-    dbg!(&uri);
     let ref_uri = Url::from_str(&uri)?;
 
     let r = client
