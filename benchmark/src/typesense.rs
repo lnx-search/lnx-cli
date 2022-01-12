@@ -4,7 +4,7 @@ use anyhow::anyhow;
 
 use reqwest::header::HeaderValue;
 use reqwest::{StatusCode, Url};
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use serde_json::Value;
 use tokio::time::Instant;
 
@@ -12,22 +12,34 @@ use crate::sampler::SamplerHandle;
 use crate::shared::{Query, RequestClient, TargetUri};
 
 
+#[derive(Deserialize, Serialize)]
+struct Doc {
+    id: String,
+    poster: String,
+    release_data: u64,
+    title: String,
+    overview: String,
+
+    #[serde(default)]
+    genres: Vec<String>,
+}
+
+
 pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Result<()> {
     let client = reqwest::Client::new();
 
     let start = Instant::now();
-    if let Some(arr) = data.as_array() {
-        for row in arr {
-            let r = client
-                .post(format!("{}/collections/{}/documents?action=upsert", address, index))
-                .header("X-TYPESENSE-API-KEY", HeaderValue::from_static("bench-key"))
-                .json(row)
-                .send()
-                .await?;
+    let docs: Vec<Doc> = serde_json::from_value(data)?;
+    for doc in docs {
+        let r = client
+            .post(format!("{}/collections/{}/documents?action=upsert", address, index))
+            .header("X-TYPESENSE-API-KEY", HeaderValue::from_static("bench-key"))
+            .json(row)
+            .send()
+            .await?;
 
-            if r.status() != StatusCode::CREATED {
-                return Err(anyhow!("got unexpected response code {} data: {}", r.status(), r.text().await?))
-            }
+        if r.status() != StatusCode::CREATED {
+            return Err(anyhow!("got unexpected response code {} data: {}", r.status(), r.text().await?))
         }
     }
 
