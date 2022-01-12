@@ -16,7 +16,7 @@ use crate::shared::{Query, RequestClient, TargetUri};
 struct Doc {
     id: String,
     poster: String,
-    release_data: u64,
+    release_date: u64,
     title: String,
     overview: String,
 
