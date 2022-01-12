@@ -25,7 +25,7 @@ pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Res
                 .send()
                 .await?;
 
-            if r.status() != StatusCode::OK {
+            if r.status() != StatusCode::CREATED {
                 return Err(anyhow!("got unexpected response code {} data: {}", r.status(), r.text().await?))
             }
         }
