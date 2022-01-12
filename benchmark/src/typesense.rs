@@ -1,41 +1,15 @@
-use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Arc;
 use anyhow::anyhow;
 
-use chrono::Utc;
 use reqwest::header::HeaderValue;
 use reqwest::{StatusCode, Url};
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use serde_json::Value;
 use tokio::time::Instant;
 
 use crate::sampler::SamplerHandle;
 use crate::shared::{Query, RequestClient, TargetUri};
-
-#[derive(Debug, Deserialize)]
-struct EnqueueResponseData {
-    #[serde(rename = "uid")]
-    update_id: usize,
-
-    #[serde(flatten)]
-    _other: HashMap<String, Value>,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "lowercase")]
-struct CheckData {
-    status: String,
-
-    #[serde(rename = "startedAt")]
-    started: Option<chrono::DateTime<Utc>>,
-
-    #[serde(rename = "finishedAt")]
-    finished: Option<chrono::DateTime<Utc>>,
-
-    #[serde(flatten)]
-    _other: HashMap<String, Value>,
-}
 
 pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Result<()> {
     let client = reqwest::Client::new();
