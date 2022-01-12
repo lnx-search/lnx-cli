@@ -5,6 +5,7 @@ mod lnx;
 mod meilisearch;
 mod sampler;
 mod shared;
+mod typesense;
 
 use std::str::FromStr;
 use std::sync::Arc;
@@ -22,6 +23,7 @@ use tokio::task::JoinHandle;
 pub enum BenchTarget {
     MeiliSearch,
     Lnx,
+    TypeSense,
 }
 
 impl FromStr for BenchTarget {
@@ -30,6 +32,7 @@ impl FromStr for BenchTarget {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "meilisearch" => Ok(Self::MeiliSearch),
+            "typesense" => Ok(Self::TypeSense),
             "lnx" => Ok(Self::Lnx),
             other => Err(format!(
                 "unknown target type got {:?}, expected either 'meilisearch' or 'lnx'",
@@ -130,6 +133,13 @@ async fn start(ctx: Context) -> anyhow::Result<()> {
                 (BenchTarget::Lnx, BenchMode::Typing) => {
                     lnx::bench_typing(addr, sample_handler, temp_terms, index).await
                 },
+
+                (BenchTarget::TypeSense, BenchMode::Standard) => {
+                    typesense::bench_standard(addr, sample_handler, temp_terms, index).await
+                },
+                (BenchTarget::TypeSense, BenchMode::Typing) => {
+                    typesense::bench_typing(addr, sample_handler, temp_terms, index).await
+                },
             }
         });
 
@@ -153,6 +163,7 @@ async fn prep_systems(target: BenchTarget, address: &str, path: &str, index: &st
     match target {
         BenchTarget::MeiliSearch => meilisearch::prep(address, json_data, index).await,
         BenchTarget::Lnx => lnx::prep(address, json_data, index).await,
+        BenchTarget::TypeSense =>  typesense::prep(address, json_data, index).await,
     }
 }
 
