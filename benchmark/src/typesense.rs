@@ -11,14 +11,24 @@ use tokio::time::Instant;
 use crate::sampler::SamplerHandle;
 use crate::shared::{Query, RequestClient, TargetUri};
 
+
 pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Result<()> {
+    let mut buffer = Vec::new();
+    if let Some(arr) = data.as_array() {
+        for row in arr {
+            buffer.push(row.to_string())
+        }
+    }
+
+    let formatted = buffer.join("\n");
+
     let client = reqwest::Client::new();
 
     let start = Instant::now();
     let r = client
-        .post(format!("{}/collections/{}/documents", address, index))
+        .post(format!("{}/collections/{}/documents/import?action=create", address, index))
         .header("X-TYPESENSE-API-KEY", HeaderValue::from_static("bench-key"))
-        .json(&data)
+        .body(formatted.as_bytes().to_vec())
         .send()
         .await?;
 
