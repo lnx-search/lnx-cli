@@ -93,6 +93,7 @@ async fn search(client: RequestClient, uri: TargetUri, query: Query) -> anyhow::
         .send()
         .await?;
 
+    let status = r.status().clone();
     dbg!(r.status(), r.text().await?);
-    Ok(r.status().as_u16())
+    Ok(status.as_u16())
 }
