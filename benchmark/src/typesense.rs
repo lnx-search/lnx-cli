@@ -13,11 +13,6 @@ use crate::shared::{Query, RequestClient, TargetUri};
 
 
 pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Result<()> {
-    let mut buffer = Vec::new();
-
-
-    let formatted = buffer.join("\n");
-
     let client = reqwest::Client::new();
 
     let start = Instant::now();
