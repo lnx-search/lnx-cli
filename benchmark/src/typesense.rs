@@ -88,7 +88,7 @@ async fn search(client: RequestClient, uri: TargetUri, query: Query) -> anyhow::
     let ref_uri = Url::from_str(&uri)?;
 
     let r = client
-        .post(ref_uri)
+        .get(ref_uri)
         .header("X-TYPESENSE-API-KEY", HeaderValue::from_static("bench-key"))
         .query(&QueryPayload { q: query, query_by: "title,overview" })
         .send()
