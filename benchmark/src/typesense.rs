@@ -78,6 +78,7 @@ pub(crate) async fn bench_typing(
 #[derive(Serialize)]
 struct QueryPayload {
     q: String,
+    query_by: Vec<&'static str>,
 }
 
 async fn search(client: RequestClient, uri: TargetUri, query: Query) -> anyhow::Result<u16> {
@@ -85,12 +86,11 @@ async fn search(client: RequestClient, uri: TargetUri, query: Query) -> anyhow::
         .replace("/search", "/documents/search");
 
     let ref_uri = Url::from_str(&uri)?;
-    dbg!(&ref_uri);
 
     let r = client
         .post(ref_uri)
         .header("X-TYPESENSE-API-KEY", HeaderValue::from_static("bench-key"))
-        .query(&QueryPayload { q: query })
+        .query(&QueryPayload { q: query, query_by: vec!["title", "overview"] })
         .send()
         .await?;
 
