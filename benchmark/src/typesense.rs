@@ -1,10 +1,11 @@
 use std::collections::HashMap;
+use std::str::FromStr;
 use std::sync::Arc;
 use anyhow::anyhow;
 
 use chrono::Utc;
 use reqwest::header::HeaderValue;
-use reqwest::StatusCode;
+use reqwest::{StatusCode, Url};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::time::Instant;
@@ -99,8 +100,10 @@ async fn search(client: RequestClient, uri: TargetUri, query: Query) -> anyhow::
     let uri = uri.replace("indexes", "collections")
         .replace("/search", "/documents/search");
 
+    let ref_uri = Url::from_str(&uri)?;
+
     let r = client
-        .post(uri.as_ref())
+        .post(ref_uri)
         .header("X-TYPESENSE-API-KEY", HeaderValue::from_static("bench-key"))
         .query(&QueryPayload { q: query })
         .send()
