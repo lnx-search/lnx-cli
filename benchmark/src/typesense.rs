@@ -84,7 +84,7 @@ async fn search(client: RequestClient, uri: TargetUri, query: Query) -> anyhow::
     let uri = uri.replace("indexes", "collections")
         .replace("/search", "/documents/search");
 
-    let ref_uri = Url::from_str(&uri).unwrap();
+    let ref_uri = Url::from_str(&uri)?;
 
     let r = client
         .post(ref_uri)
@@ -93,5 +93,6 @@ async fn search(client: RequestClient, uri: TargetUri, query: Query) -> anyhow::
         .send()
         .await?;
 
+    dbg!(r.status(), r.text().await?);
     Ok(r.status().as_u16())
 }
