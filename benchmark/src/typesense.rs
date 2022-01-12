@@ -34,7 +34,7 @@ pub(crate) async fn prep(address: &str, data: Value, index: &str) -> anyhow::Res
         let r = client
             .post(format!("{}/collections/{}/documents?action=upsert", address, index))
             .header("X-TYPESENSE-API-KEY", HeaderValue::from_static("bench-key"))
-            .json(row)
+            .json(&doc)
             .send()
             .await?;
 
