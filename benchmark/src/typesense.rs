@@ -96,6 +96,9 @@ struct QueryPayload {
 }
 
 async fn search(client: RequestClient, uri: TargetUri, query: Query) -> anyhow::Result<u16> {
+    let uri = uri.replace("indexes", "collections")
+        .replace("/search", "/documents/search");
+
     let r = client
         .post(uri.as_ref())
         .header("X-TYPESENSE-API-KEY", HeaderValue::from_static("bench-key"))
