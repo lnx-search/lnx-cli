@@ -67,7 +67,7 @@ async fn prep(ctx: &Context) -> anyhow::Result<()> {
             "writer_buffer": 60_000_000,
             "writer_threads": 4,
 
-            "reader_threads": 2,
+            "reader_threads": 1,
 
             "max_concurrency": 4,
             "search_fields": [
