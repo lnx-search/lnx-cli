@@ -34,7 +34,7 @@
                 <div class="flex flex-col" style="height: 20rem;max-height: 20rem;width: 16rem;max-width: 16rem">
                     <div v-for="pairs in Object.entries(result.doc)" class="flex items-center ">
                         <p class="text-lg font-semibold mr-2">{{ pairs[0] }}: </p>
-                        <p class="text-gray-600 italic overflow-hidden h-6">{{ pairs[1].join(", ") }}</p>
+                        <p class="text-gray-600 italic overflow-hidden h-6">{{ pairs[1] }}</p>
                     </div>
                 </div>
                 <div>
@@ -102,7 +102,26 @@
                     this.count = r.data.data.count;
                     this.hits = r.data.data.hits;
                     this.timeTaken = (r.data.data.time_taken * 1000).toFixed(2);
-                    this.results = r.data.data.hits;
+                    this.results = r.data.data.hits.map(v => {
+                        const entries = []
+                        for (let [key, entry] of Object.entries(v.doc)) {
+                            let pretty;
+                            if (entry == null) {
+                                pretty = "<empty>";
+                            } else if (typeof entry == "object" && entry.length > 1) {
+                                pretty = entry.join(", ");
+                            } else {
+                                pretty = entry;
+                            }
+                            entries.push([key, pretty]);
+                        }
+
+                        return {
+                            document_id: v.document_id,
+                            doc: Object.fromEntries(entries),
+                            score: v.score
+                        }
+                    });
                 }
             }
         });

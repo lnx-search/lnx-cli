@@ -4,7 +4,7 @@ extern crate log;
 use std::net::SocketAddr;
 use std::time::Instant;
 
-use anyhow::Error;
+use anyhow::{anyhow, Error};
 use axum::handler::{get, post};
 use axum::Router;
 use hyper::http::StatusCode;
@@ -90,7 +90,7 @@ async fn prep(ctx: &Context) -> anyhow::Result<()> {
                     "type": "i64",
                     "stored": true,
                     "indexed": false,
-                    "fast": "single"
+                    "fast": true
                 },
                 "title": {
                     "type": "text",
@@ -125,9 +125,13 @@ async fn prep(ctx: &Context) -> anyhow::Result<()> {
         .send()
         .await?;
 
-    if r.status() != StatusCode::OK {
-        return Err(Error::msg(
-            "server returned a non 200 OK code when creating index. Check your server logs.",
+    let status = r.status();
+    if status != StatusCode::OK {
+        let resp = r.text().await?;
+        return Err(anyhow!(
+            "server returned a non 200 OK code when creating index (Got {}). Check your server logs.\n {:?}",
+            status.as_str(),
+            resp,
         ));
     }
 
