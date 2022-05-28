@@ -8,7 +8,7 @@ This is generally use during development to help us profile and visually see any
 The easiest way to install is via `cargo`
 
 ```
-cargo install lnx-cli https://github.com/lnx-search/lnx-cli.git
+cargo install lnxcli --git https://github.com/lnx-search/lnx-cli.git
 ```
 
 ## Getting started
